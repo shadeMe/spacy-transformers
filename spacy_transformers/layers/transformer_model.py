@@ -260,10 +260,19 @@ def huggingface_from_pretrained(
             vocab_file_contents = fileh.read()
     trf_config["return_dict"] = True
     config = config_cls.from_pretrained(str_path, **trf_config)
+    from spacy_experimental.transformers.models.hf_wrapper import (
+        encoder_from_pretrained_hf_model,
+    )
+
     transformer = model_cls.from_pretrained(str_path, config=config)
+    our_trf = encoder_from_pretrained_hf_model(str_path)
+    our_trf.config = config
     torch_device = get_torch_default_device()
     transformer.to(torch_device)
-    return HFObjects(tokenizer, transformer, vocab_file_contents)
+    our_trf.to(torch_device)
+    our_trf.device = transformer.device
+    # return HFObjects(tokenizer, transformer, vocab_file_contents)
+    return HFObjects(tokenizer, our_trf, vocab_file_contents)
 
 
 def huggingface_tokenize(tokenizer, texts: List[str]) -> BatchEncoding:
